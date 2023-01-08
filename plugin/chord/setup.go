@@ -14,8 +14,10 @@ func setup(c *caddy.Controller) error {
 		return plugin.Error("chord", c.ArgErr())
 	}
 
+	chord := Chord{}
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		return Chord{}
+		chord.Next = next
+		return chord
 	})
 
 	return nil
