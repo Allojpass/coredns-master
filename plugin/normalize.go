@@ -37,6 +37,7 @@ func (z Zones) Matches(qname string) string {
 func (z Zones) Normalize() {
 	for i := range z {
 		z[i] = Name(z[i]).Normalize()
+
 	}
 }
 
