@@ -33,9 +33,11 @@ func (c Chord) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (
 	//QName这个函数返回的是原来的服务查询中的名称，而Name返回的是它的小写形式。
 	serviceName := state.QName()
 	answers := []dns.RR{}
-
 	var data Receive
-	resp, err := http.Get("http://192.168.3.128:5000/services/resolution?sname=" + serviceName)
+	//去掉QName的最后一个字符，因为dns返回的名称中会多一个.符号，这是域名的特性
+	serviceName = serviceName[0 : len(serviceName)-1]
+	log.Info(serviceName)
+	resp, err := http.Get("http://127.0.0.1:5000/services/resolution?sname=" + serviceName)
 	if err != nil {
 		//这里的err用于判断是否能够成功发送请求，当后端没启动的时候，无法正确建立连接，这里的err就会不为nil
 		//所以如果chord后端出现问题那么直接调用下一个插件也就是forward
@@ -46,8 +48,8 @@ func (c Chord) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (
 	bodystr := string(body)
 	var rr dns.RR
 	if err := json.Unmarshal([]byte(bodystr), &data); err == nil {
-		log.Info("本次dns请求的msg：" + data.Msg)
-		log.Info("本次dns请求的gvip：" + data.GVip)
+		log.Info("The msg of this dns is " + data.Msg)
+		log.Info("The gvip of this dns is " + data.GVip)
 		//这里要把data中的数据写入给client返回的dns消息中
 		//同时这里需要加入对于后端是否能解析该域名的判断
 		//如果后端返回的message中说明无法处理这个请求，那么需要调用forward插件也就是进入插件链下一个插件
@@ -62,7 +64,7 @@ func (c Chord) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (
 			rr.(*dns.A).A = net.ParseIP(data.GVip).To4()
 			answers = append(answers, rr)
 		} else {
-			//当后端未能正确返回的时候说明Chord也出现了问题，同样丢给forward插件处理
+			//当后端未能正确返回的时候说明Chord环也出现了问题，同样丢给forward插件处理
 			log.Info("Some unknown error happened!")
 			return plugin.NextOrFailure(c.Name(), c.Next, ctx, w, r)
 		}

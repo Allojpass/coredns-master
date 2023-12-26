@@ -6,7 +6,7 @@
       <paths name="proxy">
         <serverdata>
           <mappings>
-            <mapping deploy="/coredns" local="$PROJECT_DIR$" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
